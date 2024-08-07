@@ -1,0 +1,20 @@
+name: Deploy to S3
+
+ # on:
+  push:
+    branches:
+      - main 
+  workflow_dispatch:
+jobs:
+  deploy:
+    uses: ./.github/workflows/template.yml
+    with:
+      # Input the bucket name
+      s3-bucket-name: buffalo.accountants
+      # Input the source directory
+      source-directory: # Add the source dir here  <---
+    secrets:
+      aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      
+     
