@@ -1,0 +1,62 @@
+name: Reusable Deploy to S3
+
+# Controls when the workflow will run
+on:
+  # For a workflow to be reusable, the values for on must include workflow_call
+  workflow_call:
+
+    # Defines the inputs that can be passed from the caller workflow
+    inputs: 
+      s3-bucket-name:
+        description: 'S3 Bucket Name'
+        required: true
+        type: string
+      source-directory:
+        description: 'Directory to sync to S3'
+        required: true
+        type: string
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        description: 'AWS Access Key ID'
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        description: 'AWS Secret Access Key'
+        required: true
+    
+
+
+# This workflow contains a single job called "deploy"
+jobs:  
+  deploy:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@main
+
+      # Passing AWS credentials stored secrets in GitHub Repository
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@main
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      # Validating source files
+      - name: Validate inputs
+        run: |
+          if [ ! -d ${{ inputs.source-directory }} ]; then
+            echo "Source directory does not exist"
+            exit 1
+          fi
+
+      # Synchronizing files to an S3 bucket
+      - name: Sync files to S3
+        run: |
+          if [ ! aws s3 sync --delete ${{ inputs.source-directory }} s3://${{ inputs.s3-bucket-name }} ]; then
+            echo "S3 sync failed"
+            exit 1
+          fi
+
